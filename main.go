@@ -43,7 +43,7 @@ func init() {
 	}
 }
 
-var db *sql.DB
+var recallHandler *RecallHandler
 
 func webServer(c *cli.Context) {
 	mux := mux.NewRouter()
@@ -53,7 +53,7 @@ func webServer(c *cli.Context) {
 	mux.HandleFunc("/store", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	})
-	mux.HandleFunc("/recall/{token}", recallHandler)
+	mux.HandleFunc("/recall/{token}", recallHandler.handler)
 	mux.HandleFunc("/sweep", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	})
@@ -66,7 +66,11 @@ func webServer(c *cli.Context) {
 func main() {
 	app.Action = webServer
 	var err error
+	var db *sql.DB
 	db, err = dbOpen(dbFilename)
+	// Inject dependencies into Recall Handler
+	recallHandler = NewRecallHandler(db)
+
 	if err != nil {
 		// TODO init db if it doesn't exist
 		log.Fatal(err)
