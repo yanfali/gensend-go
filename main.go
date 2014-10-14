@@ -1,12 +1,15 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
 	"github.com/codegangsta/cli"
 	"github.com/codegangsta/negroni"
+	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -40,17 +43,17 @@ func init() {
 	}
 }
 
+var db *sql.DB
+
 func webServer(c *cli.Context) {
-	mux := http.NewServeMux()
+	mux := mux.NewRouter()
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Welcome to the home page!")
 	})
 	mux.HandleFunc("/store", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	})
-	mux.HandleFunc("/recall", func(w http.ResponseWriter, req *http.Request) {
-		http.Error(w, "Not Implemented", http.StatusNotImplemented)
-	})
+	mux.HandleFunc("/recall/{token}", recallHandler)
 	mux.HandleFunc("/sweep", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	})
@@ -62,5 +65,12 @@ func webServer(c *cli.Context) {
 
 func main() {
 	app.Action = webServer
+	var err error
+	db, err = dbOpen(dbFilename)
+	if err != nil {
+		// TODO init db if it doesn't exist
+		log.Fatal(err)
+	}
+	defer db.Close()
 	app.Run(os.Args)
 }

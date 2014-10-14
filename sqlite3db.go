@@ -16,7 +16,7 @@ var (
 	dbFilename = "./gensendgo.db"
 )
 
-func openDb(fileName string) (db *sql.DB, err error) {
+func dbOpen(fileName string) (db *sql.DB, err error) {
 	if db, err = sql.Open("sqlite3", fileName); err != nil {
 		return
 	}
@@ -31,6 +31,18 @@ func dbDumpTable(c *cli.Context) {
 	defer db.Close()
 }
 
+type GensendgoRow struct {
+	Id        string    `json:"token"`
+	MaxReads  int       `json:"maxReads"`
+	MaxDays   int       `json:"maxDays"`
+	CreatedTs time.Time `json:"createdTs"`
+	Password  string    `json:"password"`
+}
+
+func (my *GensendgoRow) String() string {
+	return fmt.Sprintf("%q %d %d %q %q", my.Id, my.MaxReads, my.MaxDays, my.CreatedTs, my.Password)
+}
+
 func dbDumpTableInner(db *sql.DB) (err error) {
 	rows, err := db.Query("select id, maxreads, maxdays, createdTs, password from gensendgo")
 	if err != nil {
@@ -39,18 +51,12 @@ func dbDumpTableInner(db *sql.DB) (err error) {
 	defer rows.Close()
 	var rowCount int
 	for rowCount = 0; rows.Next(); rowCount++ {
-		var (
-			id        string
-			maxreads  int
-			maxdays   int
-			createdTs time.Time
-			password  string
-		)
-		err = rows.Scan(&id, &maxreads, &maxdays, &createdTs, &password)
+		var aRow GensendgoRow
+		err = rows.Scan(&aRow.Id, &aRow.MaxReads, &aRow.MaxDays, &aRow.CreatedTs, &aRow.Password)
 		if err != nil {
 			return
 		}
-		log.Printf("%q %d %d %q %q\n", id, maxreads, maxdays, createdTs, password)
+		log.Printf("%s\n", aRow.String())
 	}
 	log.Printf("Found %d rows in table", rowCount)
 	return
@@ -94,7 +100,7 @@ func dbTestDataInner(db *sql.DB) (err error) {
 }
 
 func dbOpenWrapper(fn func(db *sql.DB) error) (db *sql.DB, err error) {
-	db, err = openDb(dbFilename)
+	db, err = dbOpen(dbFilename)
 	if err != nil {
 		return
 	}
