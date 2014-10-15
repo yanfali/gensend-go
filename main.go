@@ -69,7 +69,8 @@ func main() {
 	var db *sql.DB
 	db, err = dbOpen(dbFilename)
 	// Inject dependencies into Recall Handler
-	recallHandler = NewRecallHandler(db)
+	gsgoDao := NewGsgoDao(db)
+	recallHandler = NewRecallHandler(gsgoDao)
 
 	if err != nil {
 		// TODO init db if it doesn't exist

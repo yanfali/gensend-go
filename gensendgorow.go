@@ -19,6 +19,10 @@ func (my *GensendgoRow) String() string {
 	return fmt.Sprintf("%q %d %d %q %q %q", my.Id, my.MaxReads, my.MaxMinutes, my.CreatedTs, my.ExpiredTs, my.Password)
 }
 
-func (my *GensendgoRow) Scan(rows *sql.Rows) (err error) {
+func (my *GensendgoRow) ScanRows(rows *sql.Rows) (err error) {
 	return rows.Scan(&my.Id, &my.MaxReads, &my.MaxMinutes, &my.CreatedTs, &my.ExpiredTs, &my.Password)
+}
+
+func (my *GensendgoRow) ScanRow(row *sql.Row) (err error) {
+	return row.Scan(&my.Id, &my.MaxReads, &my.MaxMinutes, &my.CreatedTs, &my.ExpiredTs, &my.Password)
 }

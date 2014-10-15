@@ -17,12 +17,8 @@ var (
 )
 
 const (
-	GOSENDGO_SELECT_ROW           = "SELECT id, maxreads, maxminutes, createdTs, expiredTs, password FROM gensendgo"
-	GOSENDGO_INSERT_ROW           = "INSERT INTO gensendgo(id, maxreads, maxminutes, createdTs, expiredTs, password) VALUES(?, ?, ?, ?, ?, ?)"
-	GOSENDGO_DELETE_ROW           = "DELETE from gensendgo WHERE id=?"
-	GOSENDGO_UPDATE_ROW_MAX_READS = "UPDATE gensendgo SET maxreads=? WHERE id=?"
-	GOSENDGO_SELECT_ROW_WHERE_ID  = "SELECT * FROM gensendgo where id=? AND expiredTs > ?"
-	GOSENDGO_CREATE_TABLE         = `
+	GENSENDGO_INSERT_ROW   = "INSERT INTO gensendgo(id, maxreads, maxminutes, createdTs, expiredTs, password) VALUES(?, ?, ?, ?, ?, ?)"
+	GENSENDGO_CREATE_TABLE = `
 	create table gensendgo (
 		id string not null primary key,
 		maxreads integer not null,
@@ -31,7 +27,7 @@ const (
 		expiredTs timestamp not null,
 		password string not null
 	);
-	delete from gensendgo
+	delete from gensendgo;
 	`
 )
 
@@ -58,7 +54,7 @@ func dbDumpTable(c *cli.Context) {
 // helper to be invoked within a dbOpenWrapper
 func dbDumpTableInner(db *sql.DB) (err error) {
 	var rows *sql.Rows
-	rows, err = db.Query(GOSENDGO_SELECT_ROW)
+	rows, err = db.Query(GENSENDGO_SELECT_ROW)
 	if err != nil {
 		return
 	}
@@ -66,7 +62,7 @@ func dbDumpTableInner(db *sql.DB) (err error) {
 	var rowCount int
 	for rowCount = 0; rows.Next(); rowCount++ {
 		var aRow GensendgoRow
-		err = aRow.Scan(rows)
+		err = aRow.ScanRows(rows)
 		if err != nil {
 			return
 		}
@@ -107,7 +103,7 @@ func dbTransactionWrapper(db *sql.DB, fn func(tx *sql.Tx) error) (err error) {
 func dbTestDataInner(db *sql.DB) (err error) {
 	dbTransactionWrapper(db, func(tx *sql.Tx) (err error) {
 		// TODO might be possible to prepare these only once
-		stmt, err := tx.Prepare(GOSENDGO_INSERT_ROW)
+		stmt, err := tx.Prepare(GENSENDGO_INSERT_ROW)
 		defer stmt.Close()
 		var result sql.Result
 		expiresMinutes := 1 //TODO Make this configurable via CLI
@@ -147,63 +143,10 @@ func dbInit(c *cli.Context) {
 
 // helper to create the initial database
 func dbInitInner(db *sql.DB) (err error) {
-	_, err = db.Exec(GOSENDGO_CREATE_TABLE)
+	_, err = db.Exec(GENSENDGO_CREATE_TABLE)
 	if err != nil {
-		return errors.New(fmt.Sprintf("%q: %s\n", err, GOSENDGO_CREATE_TABLE))
+		return errors.New(fmt.Sprintf("%q: %s\n", err, GENSENDGO_CREATE_TABLE))
 	}
 	log.Println("created sqlitedb " + dbFilename)
-	return
-}
-
-func dbUpdateMaxReadCount(db *sql.DB, aRow *GensendgoRow) (err error) {
-	return dbTransactionWrapper(db, func(tx *sql.Tx) (err error) {
-		var updateRow *sql.Stmt
-		log.Printf("updating row id %q read count", aRow.Id)
-		// TODO might be possible to prepare these only once
-		updateRow, err = db.Prepare(GOSENDGO_UPDATE_ROW_MAX_READS)
-		if err != nil {
-			return
-		}
-		_, err = tx.Stmt(updateRow).Exec(aRow.MaxReads, aRow.Id)
-		return
-	})
-}
-
-func dbDeleteRowById(db *sql.DB, id string) (err error) {
-	return dbTransactionWrapper(db, func(tx *sql.Tx) (err error) {
-		var updateRow *sql.Stmt
-		log.Printf("deleting row id %q expired", id)
-		// TODO might be possible to prepare these only once
-		updateRow, err = db.Prepare(GOSENDGO_DELETE_ROW)
-		if err != nil {
-			return
-		}
-		_, err = tx.Stmt(updateRow).Exec(id)
-		return
-	})
-}
-
-func dbFetchValidRowsById(db *sql.DB, token string) (parsedRows []GensendgoRow, err error) {
-	var rows *sql.Rows
-	rows, err = db.Query(GOSENDGO_SELECT_ROW_WHERE_ID, token, time.Now().UTC())
-	if err != nil {
-		return
-	}
-	parsedRows = []GensendgoRow{}
-	defer rows.Close()
-	for rows.Next() {
-		aRow := GensendgoRow{}
-		err = aRow.Scan(rows)
-		if err != nil {
-			return nil, err
-		}
-		log.Printf("%v", aRow)
-		parsedRows = append(parsedRows, aRow)
-
-	}
-	err = rows.Err()
-	if err != nil {
-		return nil, err
-	}
 	return
 }

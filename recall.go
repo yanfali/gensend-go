@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"html"
 	"log"
@@ -14,7 +13,7 @@ import (
 // Store the db handle within the handler struct associated with the handler
 // No need to pass around a global
 type RecallHandler struct {
-	db *sql.DB
+	dao *gsgoDao
 }
 
 type JSONRecallResult struct {
@@ -22,17 +21,18 @@ type JSONRecallResult struct {
 }
 
 // Create a New Recall Handler with the appropriate db handle
-func NewRecallHandler(db *sql.DB) *RecallHandler {
-	return &RecallHandler{db}
+func NewRecallHandler(dao *gsgoDao) *RecallHandler {
+	return &RecallHandler{dao}
 }
 
 // business logic for the record
 func (my *RecallHandler) updateRecallAccounting(aRow *GensendgoRow) (err error) {
+	dao := my.dao
 	aRow.MaxReads--
 	if aRow.MaxReads == 0 {
-		return dbDeleteRowById(my.db, aRow.Id)
+		return dao.deleteById(aRow.Id)
 	} else {
-		return dbUpdateMaxReadCount(my.db, aRow)
+		return dao.updateMaxReadCount(aRow)
 	}
 	return
 }
@@ -46,7 +46,7 @@ func (my *RecallHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	log.Println(token)
 	if token != "" {
 
-		parsedRows, err := dbFetchValidRowsById(my.db, token)
+		parsedRows, err := my.dao.fetchValidRowById(token)
 		if err != nil {
 			errMsg := fmt.Sprintf("500 Internal Server Error: %v", err)
 			log.Printf("%s", errMsg)
