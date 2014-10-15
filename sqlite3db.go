@@ -40,6 +40,9 @@ func dbOpen(fileName string) (db *sql.DB, err error) {
 	if db, err = sql.Open("sqlite3", fileName); err != nil {
 		return
 	}
+	if err = db.Ping(); err != nil {
+		return
+	}
 	return db, nil
 }
 
@@ -84,6 +87,9 @@ func dbSetupTestData(c *cli.Context) {
 
 // helper to wrap boilerplate for transactions
 func dbTransactionWrapper(db *sql.DB, fn func(tx *sql.Tx) error) (err error) {
+	if err = db.Ping(); err != nil {
+		return
+	}
 	var tx *sql.Tx
 	tx, err = db.Begin()
 	if err != nil {
