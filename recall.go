@@ -38,7 +38,7 @@ func (my *RecallHandler) updateRecallAccounting(aRow *GensendgoRow) (err error) 
 }
 
 // HTTP Handler
-func (my *RecallHandler) handler(w http.ResponseWriter, req *http.Request) {
+func (my *RecallHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r := render.New(render.Options{})
 	vars := mux.Vars(req)
 	token := html.EscapeString(vars["token"])

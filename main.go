@@ -53,7 +53,7 @@ func webServer(c *cli.Context) {
 	mux.HandleFunc("/store", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	})
-	mux.HandleFunc("/recall/{token}", recallHandler.handler)
+	mux.Handle("/recall/{token}", recallHandler)
 	mux.HandleFunc("/sweep", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	})
