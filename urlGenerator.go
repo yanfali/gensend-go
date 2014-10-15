@@ -88,6 +88,6 @@ func (my *urlGenerator) Generate(plaintext string) string {
 	index = rand.Intn(currentEnd)
 	my.swap(words, index, currentEnd-1)
 
-	url := fmt.Sprintf("%s%s", my.Stringify(words[3], LETTER_LIST), my.Stringify(words[2], LETTER_LIST))
+	url := fmt.Sprintf("%s%s", my.Stringify(words[len(words)-1], LETTER_LIST), my.Stringify(words[len(words)-2], LETTER_LIST))
 	return url
 }
