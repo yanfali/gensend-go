@@ -14,7 +14,9 @@ import (
 )
 
 var (
-	app *cli.App
+	app           *cli.App
+	recallHandler *RecallHandler
+	storeHandler  *StoreHandler
 )
 
 func init() {
@@ -42,9 +44,6 @@ func init() {
 		},
 	}
 }
-
-var recallHandler *RecallHandler
-var storeHandler *StoreHandler
 
 func webServer(c *cli.Context) {
 	mux := mux.NewRouter()
