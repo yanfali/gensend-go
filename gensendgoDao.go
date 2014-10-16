@@ -87,3 +87,25 @@ func (my *gsgoDao) fetchValidRowById(token string) (parsedRows []GensendgoRow, e
 	}
 	return []GensendgoRow{aRow}, nil
 }
+
+func (my *gsgoDao) storeNewToken(token, password string, maxReads, maxMinutes int) (err error) {
+	return dbTransactionWrapper(my.db, func(tx *sql.Tx) (err error) {
+		var stmt *sql.Stmt
+		stmt, err = tx.Prepare(GENSENDGO_INSERT_ROW)
+		if err != nil {
+			return
+		}
+		defer stmt.Close()
+		var result sql.Result
+		createdTs := time.Now().UTC()
+		expiresTs := createdTs.Add(time.Minute * time.Duration(maxMinutes))
+		log.Printf("%v %v %#v", createdTs, expiresTs, time.Duration(maxMinutes))
+		result, err = stmt.Exec(token, maxReads, maxMinutes, createdTs, expiresTs, password)
+		if err != nil {
+			log.Printf("insert failed %v\n", err)
+			return
+		}
+		log.Printf("insert success %v\n", result)
+		return
+	})
+}

@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type urlGenerator struct {
+type UrlGenerator struct {
 }
 
 const (
@@ -22,7 +22,7 @@ const (
 // I'm actually trying to make it short and hard to guess since I'm using string
 // lookups in the table
 
-func (my *urlGenerator) Hash(plaintext string) []byte {
+func (my *UrlGenerator) Hash(plaintext string) []byte {
 	hash := sha256.New()
 
 	// Add a random seed of the current platform nanoseconds prefix to the hash
@@ -43,7 +43,7 @@ func (my *urlGenerator) Hash(plaintext string) []byte {
 }
 
 // Turn the raw bytes into uint64s
-func (my *urlGenerator) ToWords(raw []byte) []uint64 {
+func (my *UrlGenerator) ToWords(raw []byte) []uint64 {
 	var words = []uint64{}
 	for i := 0; i < len(raw); i += 8 {
 		end := int(math.Min(float64(len(raw)), float64(i+8)))
@@ -54,7 +54,7 @@ func (my *urlGenerator) ToWords(raw []byte) []uint64 {
 
 // Take a uint64 and then using the letter list mod the value until
 // we are negative
-func (my *urlGenerator) Stringify(word uint64, list string) string {
+func (my *UrlGenerator) Stringify(word uint64, list string) string {
 	digits := []rune{}
 	lenList := uint64(len(list))
 	for word > 0 {
@@ -67,7 +67,7 @@ func (my *urlGenerator) Stringify(word uint64, list string) string {
 	return string(digits)
 }
 
-func (my *urlGenerator) swap(array []uint64, a, b int) {
+func (my *UrlGenerator) swap(array []uint64, a, b int) {
 	array[a], array[b] = array[b], array[a]
 }
 
@@ -75,7 +75,7 @@ func (my *urlGenerator) swap(array []uint64, a, b int) {
 // 1. Hash it using sha256 + a random seed based on current invocation time
 // 2. Using two random 8 byte words out of the 32 bytes
 // 3. Convert those into strings using modulo against a fixed list of characters
-func (my *urlGenerator) Generate(plaintext string) string {
+func (my *UrlGenerator) Generate(plaintext string) string {
 	hash := my.Hash(plaintext)
 	words := my.ToWords(hash)
 	currentEnd := len(words)

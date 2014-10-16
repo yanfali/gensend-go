@@ -44,16 +44,15 @@ func init() {
 }
 
 var recallHandler *RecallHandler
+var storeHandler *StoreHandler
 
 func webServer(c *cli.Context) {
 	mux := mux.NewRouter()
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Welcome to the home page!")
 	})
-	mux.HandleFunc("/store", func(w http.ResponseWriter, req *http.Request) {
-		http.Error(w, "Not Implemented", http.StatusNotImplemented)
-	})
-	mux.Handle("/recall/{token}", recallHandler)
+	mux.Handle("/store", storeHandler).Methods("POST")
+	mux.Handle("/recall/{token}", recallHandler).Methods("GET")
 	mux.HandleFunc("/sweep", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	})
@@ -71,6 +70,7 @@ func main() {
 	// Inject dependencies into Recall Handler
 	gsgoDao := NewGsgoDao(db)
 	recallHandler = NewRecallHandler(gsgoDao)
+	storeHandler = NewStoreHandler(gsgoDao)
 
 	if err != nil {
 		// TODO init db if it doesn't exist

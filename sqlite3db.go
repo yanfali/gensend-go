@@ -101,13 +101,14 @@ func dbTransactionWrapper(db *sql.DB, fn func(tx *sql.Tx) error) (err error) {
 
 // helper to add a test record to a db
 func dbTestDataInner(db *sql.DB) (err error) {
-	dbTransactionWrapper(db, func(tx *sql.Tx) (err error) {
+	err = dbTransactionWrapper(db, func(tx *sql.Tx) (err error) {
 		// TODO might be possible to prepare these only once
-		stmt, err := tx.Prepare(GENSENDGO_INSERT_ROW)
+		var stmt *sql.Stmt
+		stmt, err = tx.Prepare(GENSENDGO_INSERT_ROW)
 		defer stmt.Close()
 		var result sql.Result
 		expiresMinutes := 1 //TODO Make this configurable via CLI
-		expiresTs := time.Now().Add(time.Minute * time.Duration(expiresMinutes))
+		expiresTs := time.Now().Add(time.Minute * time.Duration(expiresMinutes)).UTC()
 		result, err = stmt.Exec("abcdefgh", 5, expiresMinutes, time.Now().UTC(), expiresTs, "12345678")
 		if err != nil {
 			return
@@ -115,6 +116,9 @@ func dbTestDataInner(db *sql.DB) (err error) {
 		log.Printf("insert success %v\n", result)
 		return
 	})
+	if err != nil {
+		return
+	}
 	dbDumpTableInner(db)
 	return
 }

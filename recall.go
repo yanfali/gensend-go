@@ -48,21 +48,21 @@ func (my *RecallHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 		parsedRows, err := my.dao.fetchValidRowById(token)
 		if err != nil {
-			errMsg := fmt.Sprintf("500 Internal Server Error: %v", err)
+			errMsg := fmt.Sprintf("Recall Fetch Error: %v", err)
 			log.Printf("%s", errMsg)
-			http.Error(w, errMsg, http.StatusInternalServerError)
+			r.JSON(w, http.StatusInternalServerError, JSONErrorResponse{http.StatusInternalServerError, errMsg})
 			return
 		}
 
 		if len(parsedRows) == 0 {
-			http.Error(w, "404 Not Found", http.StatusNotFound)
+			r.JSON(w, http.StatusNotFound, JSONErrorResponse{http.StatusNotFound, "Token Not Found"})
 			return
 		}
 		err = my.updateRecallAccounting(&parsedRows[0])
 		if err != nil {
-			errMsg := fmt.Sprintf("500 Internal Server Error: %v", err)
+			errMsg := fmt.Sprintf("Recall Update Error: %v", err)
 			log.Printf("%s", errMsg)
-			http.Error(w, errMsg, http.StatusInternalServerError)
+			r.JSON(w, http.StatusInternalServerError, JSONErrorResponse{http.StatusInternalServerError, errMsg})
 			return
 
 		}
