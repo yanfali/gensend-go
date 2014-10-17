@@ -15,15 +15,26 @@ const (
 	GENSENDGO_SELECT_ROW_WHERE_ID  = "SELECT * FROM gensendgo where id=? AND expiredTs > ?"
 )
 
-type gsgoDao struct {
+type InsertDao interface {
+	InsertToken(token, password string, maxReads, maxMinutes int) error
+}
+
+type AccountingDao interface {
+	UpdateMaxReadCount(aRow *GensendgoRow) error
+	DeleteById(id string) error
+	FetchValidRowsById(token string) (parsedRows []GensendgoRow, err error)
+	FetchValidRowById(token string) (parsedRows []GensendgoRow, err error)
+}
+
+type GsgoDao struct {
 	db *sql.DB
 }
 
-func NewGsgoDao(db *sql.DB) *gsgoDao {
-	return &gsgoDao{db}
+func NewGsgoDao(db *sql.DB) *GsgoDao {
+	return &GsgoDao{db}
 }
 
-func (my *gsgoDao) updateMaxReadCount(aRow *GensendgoRow) (err error) {
+func (my *GsgoDao) UpdateMaxReadCount(aRow *GensendgoRow) (err error) {
 	return dbTransactionWrapper(my.db, func(tx *sql.Tx) (err error) {
 		var updateRow *sql.Stmt
 		log.Printf("updating row id %q read count", aRow.Id)
@@ -37,7 +48,7 @@ func (my *gsgoDao) updateMaxReadCount(aRow *GensendgoRow) (err error) {
 	})
 }
 
-func (my *gsgoDao) deleteById(id string) (err error) {
+func (my *GsgoDao) DeleteById(id string) (err error) {
 	return dbTransactionWrapper(my.db, func(tx *sql.Tx) (err error) {
 		var updateRow *sql.Stmt
 		log.Printf("deleting row id %q expired", id)
@@ -51,7 +62,7 @@ func (my *gsgoDao) deleteById(id string) (err error) {
 	})
 }
 
-func (my *gsgoDao) fetchValidRowsById(token string) (parsedRows []GensendgoRow, err error) {
+func (my *GsgoDao) FetchValidRowsById(token string) (parsedRows []GensendgoRow, err error) {
 	var rows *sql.Rows
 	rows, err = my.db.Query(GENSENDGO_SELECT_ROW_WHERE_ID, token, time.Now().UTC())
 	if err != nil {
@@ -76,7 +87,7 @@ func (my *gsgoDao) fetchValidRowsById(token string) (parsedRows []GensendgoRow, 
 	return
 }
 
-func (my *gsgoDao) fetchValidRowById(token string) (parsedRows []GensendgoRow, err error) {
+func (my *GsgoDao) FetchValidRowById(token string) (parsedRows []GensendgoRow, err error) {
 	var aRow GensendgoRow
 	err = aRow.ScanRow(my.db.QueryRow(GENSENDGO_SELECT_ROW_WHERE_ID, token, time.Now().UTC()))
 	if err == sql.ErrNoRows {
@@ -88,7 +99,7 @@ func (my *gsgoDao) fetchValidRowById(token string) (parsedRows []GensendgoRow, e
 	return []GensendgoRow{aRow}, nil
 }
 
-func (my *gsgoDao) storeNewToken(token, password string, maxReads, maxMinutes int) (err error) {
+func (my *GsgoDao) InsertToken(token, password string, maxReads, maxMinutes int) (err error) {
 	return dbTransactionWrapper(my.db, func(tx *sql.Tx) (err error) {
 		var stmt *sql.Stmt
 		stmt, err = tx.Prepare(GENSENDGO_INSERT_ROW)

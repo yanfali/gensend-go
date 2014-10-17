@@ -7,7 +7,7 @@ import (
 
 func TestGenerate1000IterationsNoCollisionsSamePlainText(*testing.T) {
 	test := "abc123"
-	url := &urlGenerator{}
+	url := &UrlGenerator{}
 	for i := 0; i < 1000; i++ {
 		resulta := url.Generate(test)
 		resultb := url.Generate(test)

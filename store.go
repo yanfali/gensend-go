@@ -13,7 +13,7 @@ import (
 // Store the db handle within the handler struct associated with the handler
 // No need to pass around a global
 type StoreHandler struct {
-	dao          *gsgoDao
+	dao          InsertDao
 	urlGenerator *UrlGenerator
 }
 
@@ -34,7 +34,7 @@ type JSONErrorResponse struct {
 }
 
 // Create a New Recall Handler with the appropriate db handle
-func NewStoreHandler(dao *gsgoDao) *StoreHandler {
+func NewStoreHandler(dao InsertDao) *StoreHandler {
 	return &StoreHandler{dao, new(UrlGenerator)}
 }
 
@@ -76,7 +76,7 @@ func (my *StoreHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	token := my.urlGenerator.Generate(jsonRequest.Password)
 	log.Printf("%v", jsonRequest)
-	err = my.dao.storeNewToken(token, jsonRequest.Password, jsonRequest.MaxReads, jsonRequest.MaxMinutes)
+	err = my.dao.InsertToken(token, jsonRequest.Password, jsonRequest.MaxReads, jsonRequest.MaxMinutes)
 	if err != nil {
 		errMsg := fmt.Sprintf("Store Password Error (%v)", err)
 		log.Printf("%s", errMsg)

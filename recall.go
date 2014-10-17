@@ -13,7 +13,7 @@ import (
 // Store the db handle within the handler struct associated with the handler
 // No need to pass around a global
 type RecallHandler struct {
-	dao *gsgoDao
+	dao AccountingDao
 }
 
 type JSONRecallResult struct {
@@ -21,7 +21,7 @@ type JSONRecallResult struct {
 }
 
 // Create a New Recall Handler with the appropriate db handle
-func NewRecallHandler(dao *gsgoDao) *RecallHandler {
+func NewRecallHandler(dao *GsgoDao) *RecallHandler {
 	return &RecallHandler{dao}
 }
 
@@ -30,9 +30,9 @@ func (my *RecallHandler) updateRecallAccounting(aRow *GensendgoRow) (err error) 
 	dao := my.dao
 	aRow.MaxReads--
 	if aRow.MaxReads == 0 {
-		return dao.deleteById(aRow.Id)
+		return dao.DeleteById(aRow.Id)
 	} else {
-		return dao.updateMaxReadCount(aRow)
+		return dao.UpdateMaxReadCount(aRow)
 	}
 	return
 }
@@ -46,7 +46,7 @@ func (my *RecallHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	log.Println(token)
 	if token != "" {
 
-		parsedRows, err := my.dao.fetchValidRowById(token)
+		parsedRows, err := my.dao.FetchValidRowById(token)
 		if err != nil {
 			errMsg := fmt.Sprintf("Recall Fetch Error: %v", err)
 			log.Printf("%s", errMsg)
