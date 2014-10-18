@@ -40,10 +40,10 @@ func NewStoreHandler(dao InsertDao) *StoreHandler {
 
 func validateJsonRequest(jsonRequest *JSONStoreRequest) (err error, invalid bool) {
 	if jsonRequest.MaxMinutes <= 0 {
-		return errors.New(fmt.Sprintf("maxMinutes of %d is too small", jsonRequest.MaxMinutes)), true
+		return errors.New(fmt.Sprintf("maxMinutes of %d should be greater than 0", jsonRequest.MaxMinutes)), true
 	}
 	if jsonRequest.MaxReads <= 0 {
-		return errors.New(fmt.Sprintf("maxReads of %d is too small", jsonRequest.MaxReads)), true
+		return errors.New(fmt.Sprintf("maxReads of %d should be greater than 0", jsonRequest.MaxReads)), true
 	}
 
 	if len(jsonRequest.Password) == 0 {

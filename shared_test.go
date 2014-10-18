@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -18,10 +19,14 @@ type MockInsertDao struct {
 }
 
 func (my *MockInsertDao) InsertToken(token, password string, maxReads, maxMinutes int) error {
+	if password == "crash database" {
+		return errors.New("Fake Database Error")
+	}
 	return nil
 }
 
 func init() {
+	// Heavily Cribbed from gotutorial.net lesson 8
 	router := mux.NewRouter()
 	router.Handle("/store", NewStoreHandler(new(MockInsertDao)))
 	router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
@@ -43,7 +48,7 @@ func TestTestServer(t *testing.T) {
 
 }
 
-func assertStatusCode(t *testing.T, resp *http.Response, expectedStatusCode int) {
+func assertStatusCodeEquals(t *testing.T, resp *http.Response, expectedStatusCode int) {
 	if resp.StatusCode != expectedStatusCode {
 		t.Logf("expected status code %v got %v", expectedStatusCode, resp.StatusCode)
 		t.Fail()

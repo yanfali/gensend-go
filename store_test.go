@@ -12,6 +12,7 @@ func getStoreUrl() string {
 }
 
 func getClientPostResponse(t *testing.T, content []byte) *http.Response {
+	// Boiler Plate for Setting up JSON Request
 	req, err := http.NewRequest("POST", getStoreUrl(), bytes.NewBuffer(content))
 	if err != nil {
 		t.Log(err)
@@ -27,14 +28,24 @@ func getClientPostResponse(t *testing.T, content []byte) *http.Response {
 	return resp
 }
 
+func JsonErrorsWrapper(t *testing.T, jsonStr []byte, expectedStatusCode int, fn func(jsonResp JSONErrorResponse)) {
+	// Test Expecting An Error
+	resp := getClientPostResponse(t, jsonStr)
+	defer resp.Body.Close()
+	assertStatusCodeEquals(t, resp, expectedStatusCode)
+
+	var jsonResp JSONErrorResponse
+	assertValidJSON(t, resp, &jsonResp)
+	fn(jsonResp)
+}
+
 func TestStoreOK(t *testing.T) {
 	var jsonStr = []byte(`{"password":"abc123", "maxReads": 1, "maxMinutes": 1}`)
 
 	resp := getClientPostResponse(t, jsonStr)
 	defer resp.Body.Close()
-	assertStatusCode(t, resp, http.StatusOK)
+	assertStatusCodeEquals(t, resp, http.StatusOK)
 
-	//decoder := json.NewDecoder(resp.Body)
 	var jsonResp JSONStoreResponse
 	assertValidJSON(t, resp, &jsonResp)
 
@@ -44,17 +55,62 @@ func TestStoreOK(t *testing.T) {
 	}
 }
 
-func TestStoreBadPassword(t *testing.T) {
-	var jsonStr = []byte(`{"password":"", "maxReads": 1, "maxMinutes": 1}`)
-	resp := getClientPostResponse(t, jsonStr)
-	defer resp.Body.Close()
-	assertStatusCode(t, resp, http.StatusBadRequest)
+func TestStoreInvalidPassword(t *testing.T) {
+	JsonErrorsWrapper(t, []byte(`{"password":"", "maxReads": 1, "maxMinutes": 1}`), http.StatusBadRequest,
+		func(jsonResp JSONErrorResponse) {
+			if jsonResp.StatusCode != http.StatusBadRequest || !strings.Contains(jsonResp.ErrorMessage, "Password") {
+				t.Logf("Expected Password Error, got %q", jsonResp.ErrorMessage)
+				t.Fail()
+			}
+		})
+}
 
-	var jsonResp JSONErrorResponse
-	assertValidJSON(t, resp, &jsonResp)
+func TestStoreInvalidMaxReads(t *testing.T) {
+	JsonErrorsWrapper(t, []byte(`{"password":"321cba", "maxReads": 0, "maxMinutes": 1}`), http.StatusBadRequest,
+		func(jsonResp JSONErrorResponse) {
+			if jsonResp.StatusCode != http.StatusBadRequest || !strings.Contains(jsonResp.ErrorMessage, "maxReads") {
+				t.Logf("Expected maxReads Error, got %q", jsonResp.ErrorMessage)
+				t.Fail()
+			}
+		})
+}
 
-	if jsonResp.StatusCode != http.StatusBadRequest || !strings.Contains(jsonResp.ErrorMessage, "Password") {
-		t.Logf("Expected Password Error, got %q", jsonResp.ErrorMessage)
-		t.Fail()
-	}
+func TestStoreInvalidMaxReadsNegative(t *testing.T) {
+	JsonErrorsWrapper(t, []byte(`{"password":"321cba", "maxReads": -1, "maxMinutes": 1}`), http.StatusBadRequest,
+		func(jsonResp JSONErrorResponse) {
+			if jsonResp.StatusCode != http.StatusBadRequest || !strings.Contains(jsonResp.ErrorMessage, "maxReads") {
+				t.Logf("Expected maxReads Error, got %q", jsonResp.ErrorMessage)
+				t.Fail()
+			}
+		})
+}
+
+func TestStoreInvalidMaxMinutes(t *testing.T) {
+	JsonErrorsWrapper(t, []byte(`{"password":"321cba", "maxReads": 1, "maxMinutes": 0}`), http.StatusBadRequest,
+		func(jsonResp JSONErrorResponse) {
+			if jsonResp.StatusCode != http.StatusBadRequest || !strings.Contains(jsonResp.ErrorMessage, "maxMinutes") {
+				t.Logf("Expected maxMinutes Error, got %q", jsonResp.ErrorMessage)
+				t.Fail()
+			}
+		})
+}
+
+func TestStoreInvalidJSON(t *testing.T) {
+	JsonErrorsWrapper(t, []byte(`{"password:"321cba", "maxReads": 1, "maxMinutes": 0}`), http.StatusInternalServerError,
+		func(jsonResp JSONErrorResponse) {
+			if jsonResp.StatusCode != http.StatusInternalServerError || !strings.Contains(jsonResp.ErrorMessage, "Decode Error") {
+				t.Logf("Expected Decode Error, got %q", jsonResp.ErrorMessage)
+				t.Fail()
+			}
+		})
+}
+
+func TestStoreDBError(t *testing.T) {
+	JsonErrorsWrapper(t, []byte(`{"password":"crash database", "maxReads": 1, "maxMinutes": 1}`), http.StatusInternalServerError,
+		func(jsonResp JSONErrorResponse) {
+			if jsonResp.StatusCode != http.StatusInternalServerError || !strings.Contains(jsonResp.ErrorMessage, "Store Password") {
+				t.Logf("Expected Fake Database Error, got %q", jsonResp.ErrorMessage)
+				t.Fail()
+			}
+		})
 }
