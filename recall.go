@@ -21,7 +21,7 @@ type JSONRecallResult struct {
 }
 
 // Create a New Recall Handler with the appropriate db handle
-func NewRecallHandler(dao *GsgoDao) *RecallHandler {
+func NewRecallHandler(dao AccountingDao) *RecallHandler {
 	return &RecallHandler{dao}
 }
 

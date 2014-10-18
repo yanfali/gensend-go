@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"net/http"
 	"strings"
 	"testing"
@@ -11,26 +10,9 @@ func getStoreUrl() string {
 	return test_server.URL + "/store"
 }
 
-func getClientPostResponse(t *testing.T, content []byte) *http.Response {
-	// Boiler Plate for Setting up JSON Request
-	req, err := http.NewRequest("POST", getStoreUrl(), bytes.NewBuffer(content))
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Log(err)
-		t.Fail()
-	}
-	return resp
-}
-
 func JsonErrorsWrapper(t *testing.T, jsonStr []byte, expectedStatusCode int, fn func(jsonResp JSONErrorResponse)) {
 	// Test Expecting An Error
-	resp := getClientPostResponse(t, jsonStr)
+	resp := getClientResponse(t, POST, jsonStr)
 	defer resp.Body.Close()
 	assertStatusCodeEquals(t, resp, expectedStatusCode)
 
@@ -42,7 +24,7 @@ func JsonErrorsWrapper(t *testing.T, jsonStr []byte, expectedStatusCode int, fn 
 func TestStoreOK(t *testing.T) {
 	var jsonStr = []byte(`{"password":"abc123", "maxReads": 1, "maxMinutes": 1}`)
 
-	resp := getClientPostResponse(t, jsonStr)
+	resp := getClientResponse(t, POST, jsonStr)
 	defer resp.Body.Close()
 	assertStatusCodeEquals(t, resp, http.StatusOK)
 
@@ -58,14 +40,14 @@ func TestStoreOK(t *testing.T) {
 func TestUniqueTokenReturnedPerStore(t *testing.T) {
 	var jsonStr = []byte(`{"password":"abc123", "maxReads": 1, "maxMinutes": 1}`)
 
-	resp := getClientPostResponse(t, jsonStr)
+	resp := getClientResponse(t, POST, jsonStr)
 	assertStatusCodeEquals(t, resp, http.StatusOK)
 
 	var jsonResp1 JSONStoreResponse
 	assertValidJSON(t, resp, &jsonResp1)
 	resp.Body.Close()
 
-	resp = getClientPostResponse(t, jsonStr)
+	resp = getClientResponse(t, POST, jsonStr)
 	defer resp.Body.Close()
 	assertStatusCodeEquals(t, resp, http.StatusOK)
 	var jsonResp2 JSONStoreResponse

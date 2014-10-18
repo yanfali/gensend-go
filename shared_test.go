@@ -1,18 +1,26 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 )
 
 var (
-	test_server *httptest.Server
+	test_server       *httptest.Server
+	mockAccountingDao *MockAccountingDao
+)
+
+const (
+	POST = "POST"
+	GET  = "GET"
 )
 
 type MockInsertDao struct {
@@ -25,10 +33,50 @@ func (my *MockInsertDao) InsertToken(token, password string, maxReads, maxMinute
 	return nil
 }
 
+type MockAccountingDao struct {
+	rows map[string]*GensendgoRow
+}
+
+func getUTCTime() time.Time {
+	return time.Now().UTC()
+}
+
+func NewMockAccountingDao() *MockAccountingDao {
+	dao := new(MockAccountingDao)
+	dao.rows = make(map[string]*GensendgoRow)
+	dao.rows["tokenabc"] = &GensendgoRow{"tokenabc", 1, 1, getUTCTime(), getUTCTime(), "password"}
+	dao.rows["tokenReadOnce"] = &GensendgoRow{"tokenReadOnce", 1, 1, getUTCTime(), getUTCTime().Add(time.Minute * 1), "password"}
+	return dao
+}
+
+func (my *MockAccountingDao) UpdateMaxReadCount(aRow *GensendgoRow) error {
+	return nil
+}
+func (my *MockAccountingDao) DeleteById(id string) error {
+	my.rows[id].MaxReads--
+	log.Printf("DeleteById: %q", id)
+	return nil
+}
+func (my *MockAccountingDao) FetchValidRowsById(token string) ([]GensendgoRow, error) {
+	return []GensendgoRow{}, nil
+}
+
+func (my *MockAccountingDao) FetchValidRowById(token string) ([]GensendgoRow, error) {
+	rows := []GensendgoRow{}
+	if row, ok := my.rows[token]; ok {
+		if row.MaxReads > 0 {
+			rows = append(rows, *row)
+		}
+	}
+	return rows, nil
+}
+
 func init() {
 	// Heavily Cribbed from gotutorial.net lesson 8
 	router := mux.NewRouter()
 	router.Handle("/store", NewStoreHandler(new(MockInsertDao)))
+	mockAccountingDao = NewMockAccountingDao()
+	router.Handle("/recall/{token}", NewRecallHandler(mockAccountingDao))
 	router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 	})
 	test_server = httptest.NewServer(router)
@@ -62,4 +110,21 @@ func assertValidJSON(t *testing.T, resp *http.Response, jsonObj interface{}) {
 		t.Log(err)
 		t.Fail()
 	}
+}
+
+func getClientResponse(t *testing.T, verb string, content []byte) *http.Response {
+	// Boiler Plate for Setting up JSON Request
+	req, err := http.NewRequest(verb, getStoreUrl(), bytes.NewBuffer(content))
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Log(err)
+		t.Fail()
+	}
+	return resp
 }
