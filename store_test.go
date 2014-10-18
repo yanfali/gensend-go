@@ -55,6 +55,28 @@ func TestStoreOK(t *testing.T) {
 	}
 }
 
+func TestUniqueTokenReturnedPerStore(t *testing.T) {
+	var jsonStr = []byte(`{"password":"abc123", "maxReads": 1, "maxMinutes": 1}`)
+
+	resp := getClientPostResponse(t, jsonStr)
+	assertStatusCodeEquals(t, resp, http.StatusOK)
+
+	var jsonResp1 JSONStoreResponse
+	assertValidJSON(t, resp, &jsonResp1)
+	resp.Body.Close()
+
+	resp = getClientPostResponse(t, jsonStr)
+	defer resp.Body.Close()
+	assertStatusCodeEquals(t, resp, http.StatusOK)
+	var jsonResp2 JSONStoreResponse
+	assertValidJSON(t, resp, &jsonResp2)
+
+	if jsonResp2.Token == jsonResp1.Token {
+		t.Logf("Tokens unexpectedly matched for password %q, first %q, second %q", "abc123", jsonResp1.Token, jsonResp2.Token)
+		t.Fail()
+	}
+}
+
 func TestStoreInvalidPassword(t *testing.T) {
 	JsonErrorsWrapper(t, []byte(`{"password":"", "maxReads": 1, "maxMinutes": 1}`), http.StatusBadRequest,
 		func(jsonResp JSONErrorResponse) {
