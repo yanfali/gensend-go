@@ -5,3 +5,5 @@ get:
 initdb:
 	gensend-go db init
 	gensend-go db test
+test:
+	go test
