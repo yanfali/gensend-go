@@ -7,7 +7,7 @@ import (
 )
 
 func getStoreUrl() string {
-	return test_server.URL + "/store"
+	return test_server.URL + getBaseAPIUrl() + "/store"
 }
 
 func JsonErrorsWrapper(t *testing.T, jsonStr []byte, expectedStatusCode int, fn func(jsonResp JSONErrorResponse)) {

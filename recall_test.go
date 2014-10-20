@@ -7,11 +7,11 @@ import (
 )
 
 func getRecallUrl() string {
-	return test_server.URL + "/recall"
+	return test_server.URL + getBaseAPIUrl() + "/recall"
 }
 
 func TestRecallOK(t *testing.T) {
-	resp, err := http.Get(test_server.URL + "/recall/tokenabc")
+	resp, err := http.Get(getRecallUrl() + "/tokenabc")
 	if resp.StatusCode != http.StatusOK {
 		t.Log(err)
 		t.Fail()
@@ -20,7 +20,7 @@ func TestRecallOK(t *testing.T) {
 
 func TestRecallMaxReadsReached(t *testing.T) {
 	// Read token once
-	resp, err := http.Get(test_server.URL + "/recall/tokenReadOnce")
+	resp, err := http.Get(getRecallUrl() + "/tokenReadOnce")
 	if resp.StatusCode != http.StatusOK {
 		t.Log(err)
 		t.Fail()
@@ -39,7 +39,7 @@ func TestRecallMaxReadsReached(t *testing.T) {
 	}
 
 	// Second read should fail with no token returned
-	resp, err = http.Get(test_server.URL + "/recall/tokenReadOnce")
+	resp, err = http.Get(getRecallUrl() + "/tokenReadOnce")
 	if resp.StatusCode != http.StatusNotFound {
 		t.Log(err)
 		t.Fail()
@@ -47,7 +47,7 @@ func TestRecallMaxReadsReached(t *testing.T) {
 }
 
 func TestRecallTokenNotFound(t *testing.T) {
-	resp, err := http.Get(test_server.URL + "/recall/tokenBogus")
+	resp, err := http.Get(getRecallUrl() + "/tokenBogus")
 	if resp.StatusCode != http.StatusNotFound {
 		t.Log(err)
 		t.Fail()

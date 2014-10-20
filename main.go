@@ -19,6 +19,10 @@ var (
 	storeHandler  *StoreHandler
 )
 
+func getBaseAPIUrl() string {
+	return "/api/v1"
+}
+
 func init() {
 	app = cli.NewApp()
 	app.Name = "gensend-go"
@@ -50,11 +54,11 @@ func webServer(c *cli.Context) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Welcome to the home page!")
 	})
-	mux.Handle("/store", storeHandler).Methods("POST")
-	mux.Handle("/recall/{token}", recallHandler).Methods("GET")
-	mux.HandleFunc("/sweep", func(w http.ResponseWriter, req *http.Request) {
+	mux.Handle(getBaseAPIUrl()+"/store", storeHandler).Methods("POST")
+	mux.Handle(getBaseAPIUrl()+"/recall/{token}", recallHandler).Methods("GET")
+	mux.HandleFunc(getBaseAPIUrl()+"/sweep", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
-	})
+	}).Methods("PUT")
 
 	n := negroni.Classic()
 	n.UseHandler(mux)
