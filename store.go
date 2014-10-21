@@ -54,6 +54,7 @@ func validateJsonRequest(jsonRequest *JSONStoreRequest) (err error, invalid bool
 
 // HTTP Handler
 func (my *StoreHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	addCORS(w)
 	decoder := json.NewDecoder(req.Body)
 	var jsonRequest JSONStoreRequest
 	r := render.New(render.Options{})
