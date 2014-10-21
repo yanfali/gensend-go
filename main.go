@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/codegangsta/cli"
 	"github.com/codegangsta/negroni"
@@ -26,6 +27,18 @@ func getBaseAPIUrl() string {
 func init() {
 	app = cli.NewApp()
 	app.Name = "gensend-go"
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "cors, c",
+			Value: "",
+			Usage: "CORS: Allow Origin e.g. \"localhost:3030\"",
+		},
+		cli.IntFlag{
+			Name:  "port, p",
+			Value: 3030,
+			Usage: "Default listening port",
+		},
+	}
 	app.Commands = []cli.Command{
 		{
 			Name:      "database",
@@ -61,8 +74,11 @@ func webServer(c *cli.Context) {
 	}).Methods("PUT")
 
 	n := negroni.Classic()
+	if corsOrigin := c.String("cors"); corsOrigin != "" {
+		n.Use(NewCORSMiddleware(corsOrigin))
+	}
 	n.UseHandler(mux)
-	n.Run(":3030")
+	n.Run(":" + strconv.Itoa(c.Int("port")))
 }
 
 func main() {
