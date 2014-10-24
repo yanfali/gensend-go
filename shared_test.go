@@ -74,9 +74,9 @@ func (my *MockAccountingDao) FetchValidRowById(token string) ([]GensendgoRow, er
 func init() {
 	// Heavily Cribbed from gotutorial.net lesson 8
 	router := mux.NewRouter()
-	router.Handle(getBaseAPIUrl()+"/store", NewStoreHandler(new(MockInsertDao)))
+	router.Handle(getBaseAPIUrl()+"/store", appHandler{NewStoreHandler(new(MockInsertDao))})
 	mockAccountingDao = NewMockAccountingDao()
-	router.Handle(getBaseAPIUrl()+"/recall/{token}", NewRecallHandler(mockAccountingDao))
+	router.Handle(getBaseAPIUrl()+"/recall/{token}", appHandler{NewRecallHandler(mockAccountingDao)})
 	router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 	})
 	test_server = httptest.NewServer(router)

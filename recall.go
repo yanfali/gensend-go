@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"html"
 	"log"
 	"net/http"
@@ -42,33 +42,23 @@ func addCORS(w http.ResponseWriter) {
 }
 
 // HTTP Handler
-func (my *RecallHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (my *RecallHandler) handler(w http.ResponseWriter, req *http.Request) (int, error) {
 	addCORS(w)
-	r := render.New(render.Options{})
 	vars := mux.Vars(req)
 	token := html.EscapeString(vars["token"])
-	var results JSONRecallResult = JSONRecallResult{[]GensendgoRow{}}
 	log.Println(token)
+	var results JSONRecallResult = JSONRecallResult{[]GensendgoRow{}}
 	if token != "" {
-
 		parsedRows, err := my.dao.FetchValidRowById(token)
 		if err != nil {
-			errMsg := fmt.Sprintf("Recall Fetch Error: %v", err)
-			log.Printf("%s", errMsg)
-			r.JSON(w, http.StatusInternalServerError, JSONErrorResponse{http.StatusInternalServerError, errMsg})
-			return
+			return http.StatusInternalServerError, err
 		}
 
 		if len(parsedRows) == 0 {
-			r.JSON(w, http.StatusNotFound, JSONErrorResponse{http.StatusNotFound, "Token Not Found"})
-			return
+			return http.StatusNotFound, errors.New("Token Not Found")
 		}
-		err = my.updateRecallAccounting(&parsedRows[0])
-		if err != nil {
-			errMsg := fmt.Sprintf("Recall Update Error: %v", err)
-			log.Printf("%s", errMsg)
-			r.JSON(w, http.StatusInternalServerError, JSONErrorResponse{http.StatusInternalServerError, errMsg})
-			return
+		if err = my.updateRecallAccounting(&parsedRows[0]); err != nil {
+			return http.StatusInternalServerError, err
 
 		}
 
@@ -77,5 +67,7 @@ func (my *RecallHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 		results.Results = parsedRows
 	}
+	r := render.New(render.Options{})
 	r.JSON(w, http.StatusOK, results)
+	return http.StatusOK, nil
 }

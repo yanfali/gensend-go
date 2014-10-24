@@ -102,7 +102,7 @@ func TestStoreInvalidMaxMinutes(t *testing.T) {
 func TestStoreInvalidJSON(t *testing.T) {
 	JsonErrorsWrapper(t, []byte(`{"password:"321cba", "maxReads": 1, "maxMinutes": 0}`), http.StatusInternalServerError,
 		func(jsonResp JSONErrorResponse) {
-			if jsonResp.StatusCode != http.StatusInternalServerError || !strings.Contains(jsonResp.ErrorMessage, "Decode Error") {
+			if jsonResp.StatusCode != http.StatusInternalServerError || !strings.Contains(jsonResp.ErrorMessage, "Syntax Error") {
 				t.Logf("Expected Decode Error, got %q", jsonResp.ErrorMessage)
 				t.Fail()
 			}
@@ -112,8 +112,8 @@ func TestStoreInvalidJSON(t *testing.T) {
 func TestStoreDBError(t *testing.T) {
 	JsonErrorsWrapper(t, []byte(`{"password":"crash database", "maxReads": 1, "maxMinutes": 1}`), http.StatusInternalServerError,
 		func(jsonResp JSONErrorResponse) {
-			if jsonResp.StatusCode != http.StatusInternalServerError || !strings.Contains(jsonResp.ErrorMessage, "Store Password") {
-				t.Logf("Expected Fake Database Error, got %q", jsonResp.ErrorMessage)
+			if jsonResp.StatusCode != http.StatusInternalServerError || !strings.Contains(jsonResp.ErrorMessage, "Database") {
+				t.Logf("Expected Database Error, got %q", jsonResp.ErrorMessage)
 				t.Fail()
 			}
 		})

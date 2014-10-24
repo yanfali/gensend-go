@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
 	"gopkg.in/unrolled/render.v1"
@@ -52,38 +51,29 @@ func validateJsonRequest(jsonRequest *JSONStoreRequest) (err error, invalid bool
 	return nil, false
 }
 
-// HTTP Handler
-func (my *StoreHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (my *StoreHandler) handler(w http.ResponseWriter, req *http.Request) (int, error) {
 	addCORS(w)
 	decoder := json.NewDecoder(req.Body)
 	var jsonRequest JSONStoreRequest
 	r := render.New(render.Options{})
-	err := decoder.Decode(&jsonRequest)
-	if err != nil {
-		errMsg := fmt.Sprintf("500 Internal Server Error: Decode Error (%v)", err)
-		log.Printf("%#v", err)
-		if serr, ok := err.(*json.UnmarshalTypeError); ok {
-			errMsg = fmt.Sprintf("Error decoding field expected type %v got %s", serr.Type, serr.Value)
+	if err := decoder.Decode(&jsonRequest); err != nil {
+		errMsg := fmt.Sprintf("%#v", err)
+		switch err.(type) {
+		case *json.SyntaxError:
+			errMsg = fmt.Sprintf("Syntax Error %v", err)
+		case *json.UnmarshalTypeError:
+			serr := err.(*json.UnmarshalTypeError)
+			errMsg = fmt.Sprintf("Type Error expected type %v got %q", serr.Type, serr.Value)
 		}
-		log.Printf("%s", errMsg)
-		r.JSON(w, http.StatusInternalServerError, JSONErrorResponse{http.StatusInternalServerError, errMsg})
-		return
+		return http.StatusInternalServerError, errors.New(errMsg)
 	}
-
 	if err, invalid := validateJsonRequest(&jsonRequest); invalid {
-		r.JSON(w, http.StatusBadRequest, JSONErrorResponse{http.StatusBadRequest, fmt.Sprintf("%s", err)})
-		return
+		return http.StatusBadRequest, err
 	}
-
 	token := my.urlGenerator.Generate(jsonRequest.Password)
-	log.Printf("%v", jsonRequest)
-	err = my.dao.InsertToken(token, jsonRequest.Password, jsonRequest.MaxReads, jsonRequest.MaxMinutes)
-	if err != nil {
-		errMsg := fmt.Sprintf("Store Password Error (%v)", err)
-		log.Printf("%s", errMsg)
-		r.JSON(w, http.StatusInternalServerError, JSONErrorResponse{http.StatusInternalServerError, errMsg})
-		return
+	if err := my.dao.InsertToken(token, jsonRequest.Password, jsonRequest.MaxReads, jsonRequest.MaxMinutes); err != nil {
+		return http.StatusInternalServerError, err
 	}
-	var results JSONStoreResponse = JSONStoreResponse{token, fmt.Sprintf("/recall/%s", token)}
-	r.JSON(w, http.StatusOK, results)
+	r.JSON(w, http.StatusOK, JSONStoreResponse{token, fmt.Sprintf("/recall/%s", token)})
+	return http.StatusOK, nil
 }

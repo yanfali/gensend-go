@@ -67,8 +67,8 @@ func webServer(c *cli.Context) {
 	mux.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Welcome to the home page!")
 	})
-	mux.Handle(getBaseAPIUrl()+"/store", storeHandler).Methods("POST")
-	mux.Handle(getBaseAPIUrl()+"/recall/{token}", recallHandler).Methods("GET")
+	mux.Handle(getBaseAPIUrl()+"/store", appHandler{storeHandler}).Methods("POST")
+	mux.Handle(getBaseAPIUrl()+"/recall/{token}", appHandler{recallHandler}).Methods("GET")
 	mux.HandleFunc(getBaseAPIUrl()+"/sweep", func(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "Not Implemented", http.StatusNotImplemented)
 	}).Methods("PUT")
