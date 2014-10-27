@@ -2,17 +2,71 @@
   <div ng-include="'components/navbar/navbar.html'"></div>
   <div class="row row-gap">
     <div class="col-lg-12">
-       <h2>Generate</h2>
+      <div class="row-gap">
+         <h2 class="text-center">Generate</h2>
 
+         <h4 class="text-center">Generate a random password</h4>
+
+      </div>
+      <form class="form-horizontal" role="form">
+        <div class="col-xs-12">
+          <div class="col-sm-6 col-xs-12">
+            <div class="form-group">
+              <label for="length" class="col-xs-6 control-label">Length</label>
+              <div class="col-xs-2">
+                <input type="text" id="length" class="form-control" ng-model="generateForm.length"></input>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="letters" class="col-xs-6 control-label">Letters</label>
+              <div class="col-xs-6">
+                <input type="checkbox" class="margintop" name="letters" id="letters" ng-model="generateForm.letters"></input>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="mixedCase" class="col-xs-6 control-label">Mixed Case</label>
+              <div class="col-xs-6">
+                <input name="mixedCase" class="margintop" id="mixedCase" type="checkbox" ng-model="generateForm.mixedCase"></input>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 col-xs-12 row-gap">
+            <div class="form-group">
+              <label for="numbers" class="col-xs-6 control-label">Numbers</label>
+              <div class="col-xs-6">
+                <input name="numbers" class="margintop" id="numbers" type="checkbox" ng-model="generateForm.numbers"></input>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="punctuation" class="col-xs-6 control-label">Punctuation</label>
+              <div class="col-xs-6">
+                <input name="punctuation" class="margintop" id="punctuation" type="checkbox" ng-model="generateForm.punctuation"></input>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="similarChars" class="col-xs-6 control-label">Similar Chars</label>
+              <div class="col-xs-6">
+                <input name="similarChars" class="margintop" id="similarChars" type="checkbox"
+                ng-model="generateForm.similarChars"></input>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-xs-offset-4 col-xs-4">
+            <input type="submit" class="form-control" value="Generate Password"></input>
+          </div>
+        </div>
+      </form>
+      <hr>
+      <div class="footer">
+        <p>Based on work by MattB and ChrisW on <a href="https://github.com/Brunty/Gen-Send">Gen-Send</a>
+
+        </p>
+        <p>This is a self contained, less scaleable version of the original Gen-Send project.
+          Originally designed to it can run within a more restrictive environment with fewer
+          dependencies like Sandstorm.io</p>
+      </div>
     </div>
-  </div>
-  <hr>
-  <div class="footer">
-    <p>Based on work by MattB and ChrisW on <a href="https://github.com/Brunty/Gen-Send">Gen-Send</a>
-
-    </p>
-    <p>This is a self contained, less scaleable version of the original Gen-Send project.
-      Originally designed to it can run within a more restrictive environment with fewer
-      dependencies like Sandstorm.io</p>
-  </div>
-</div>
+  </div !-- row -->
+</div !-- container -->

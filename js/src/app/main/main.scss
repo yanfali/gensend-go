@@ -41,3 +41,8 @@
 .clickable {
   cursor: pointer;
 }
+
+// override bs3's defaults which don't work well for horizontal forms
+input[type="checkbox"].margintop {
+  margin-top:11px;
+}
