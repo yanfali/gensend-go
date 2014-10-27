@@ -12,6 +12,7 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/cors"
 )
 
 var (
@@ -75,7 +76,7 @@ func webServer(c *cli.Context) {
 
 	n := negroni.Classic()
 	if corsOrigin := c.String("cors"); corsOrigin != "" {
-		n.Use(NewCORSMiddleware(corsOrigin))
+		n.Use(cors.New(cors.Options{AllowedOrigins: []string{corsOrigin}}))
 	}
 	n.UseHandler(mux)
 	n.Run(":" + strconv.Itoa(c.Int("port")))
