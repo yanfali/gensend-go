@@ -2,16 +2,15 @@
   <div ng-include="'components/navbar/navbar.html'"></div>
   <div class="row row-gap">
     <div class="col-lg-12 center-box">
-      <div class="main-box clickable">
+      <div class="main-box clickable" ng-click="generate()">
          <h2>Generate</h2>
-
         <p>Generate Password</p>
       </div>
     </div>
   </div>
   <div class="row row-gap">
     <div class="col-lg-12 center-box">
-      <div class="main-box clickable">
+      <div class="main-box clickable" ng-click="send()">
          <h2>Send</h2>
 
         <p>Send A Password</p>
@@ -20,7 +19,7 @@
   </div>
   <hr>
   <div class="footer">
-    <p>Based on work by MattB and ChrisW on <a href="https://github.com/Brunty/Gen-Send">Gen-Send</a>
+    <p>Based on work by MattB and ChrisW on <a href="https://gensend.com">Gensend.com</a> <a href="https://github.com/Brunty/Gen-Send">(Github)</a>
 
     </p>
     <p>This is a self contained, less scaleable version of the original Gen-Send project.
