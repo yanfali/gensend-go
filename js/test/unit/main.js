@@ -1,3 +1,4 @@
+/* global describe, beforeEach, inject, it, expect */
 'use strict';
 
 describe('controllers', function(){
@@ -9,14 +10,15 @@ describe('controllers', function(){
   	scope = $rootScope.$new();
   }));
 
-  it('should define more than 5 awesome things', inject(function($controller) {
-    expect(scope.awesomeThings).toBeUndefined();
+  it('Should define two functions', inject(function($controller) {
+    expect(scope.generate).toBeUndefined();
+    expect(scope.send).toBeUndefined();
 
     $controller('MainCtrl', {
       $scope: scope
   	});
 
-    expect(angular.isArray(scope.awesomeThings)).toBeTruthy();
-    expect(scope.awesomeThings.length > 5).toBeTruthy();
+    expect(angular.isFunction(scope.generate)).toBeTruthy();
+    expect(angular.isFunction(scope.send)).toBeTruthy();
   }));
 });
