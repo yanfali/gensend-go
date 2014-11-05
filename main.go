@@ -76,7 +76,11 @@ func webServer(c *cli.Context) {
 
 	n := negroni.Classic()
 	if corsOrigin := c.String("cors"); corsOrigin != "" {
-		n.Use(cors.New(cors.Options{AllowedOrigins: []string{corsOrigin}}))
+		log.Printf("Adding cors header %s", corsOrigin)
+		c := cors.New(cors.Options{
+			AllowedOrigins: []string{corsOrigin},
+		})
+		n.Use(c)
 	}
 	n.UseHandler(mux)
 	n.Run(":" + strconv.Itoa(c.Int("port")))

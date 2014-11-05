@@ -37,13 +37,8 @@ func (my *RecallHandler) updateRecallAccounting(aRow *GensendgoRow) (err error) 
 	return
 }
 
-func addCORS(w http.ResponseWriter) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-}
-
 // HTTP Handler
 func (my *RecallHandler) handler(w http.ResponseWriter, req *http.Request) (int, error) {
-	addCORS(w)
 	vars := mux.Vars(req)
 	token := html.EscapeString(vars["token"])
 	log.Println(token)
